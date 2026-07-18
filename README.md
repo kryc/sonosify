@@ -66,19 +66,22 @@ filesystem**.
 ## Usage
 
 ```sh
-python3 sonosify.py <source> <destination> [--filter ext1,ext2,...]
+python3 sonosify.py <source> <destination> [--filter ext1,ext2,...] [--jobs N]
 ```
 
 - `source` — root of the existing music library to read from.
 - `destination` — root of the Sonos-friendly library to create/update.
 - `--filter` — comma-separated list of file extensions to process
   (default: `m4a`).
+- `--jobs`, `-j` — number of worker processes to use
+  (default: number of CPU cores).
 
 ### Example
 
 ```sh
 python3 sonosify.py ~/Music/Library /srv/sonos/Library
 python3 sonosify.py ~/Music/Library /srv/sonos/Library --filter m4a,mp3,flac
+python3 sonosify.py ~/Music/Library /srv/sonos/Library --jobs 8
 ```
 
 ## Output
