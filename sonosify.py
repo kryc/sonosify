@@ -152,8 +152,11 @@ if __name__ == '__main__':
     parser.add_argument('--filter', type=str, default='m4a', help='Filetype filer')
     parser.add_argument('--jobs', '-j', type=int, default=os.cpu_count() or 1,
                         help='Number of worker processes (default: number of CPU cores)')
+    parser.add_argument('--quiet', '-q', action='store_true',
+                        help='Suppress progress and summary output')
     args = parser.parse_args()
 
+    quiet = args.quiet
     filter = args.filter.split(',')
 
     new = 0
@@ -181,10 +184,12 @@ if __name__ == '__main__':
     pool = multiprocessing.Pool(processes=jobs)
     try:
         for path, status, action, error in pool.imap_unordered(Worker, tasks):
-            ClearLine()
+            if not quiet:
+                ClearLine()
             if error is not None:
                 errors += 1
-                PrintMessage(f'[!] Error processing {os.path.basename(path)}: {error}')
+                if not quiet:
+                    PrintMessage(f'[!] Error processing {os.path.basename(path)}: {error}')
             elif status == 'new':
                 new += 1
             elif status == 'updated':
@@ -194,15 +199,16 @@ if __name__ == '__main__':
             if action == 'link':
                 links += 1
 
-            sys.stdout.write('[N:{:05d} U:{:04d} S:{:05d} L:{:05d} E:{:03d}] {:34s}'.format(
-                new,
-                updated,
-                skipped,
-                links,
-                errors,
-                os.path.basename(path)[:34]
-            ))
-            sys.stdout.flush()
+            if not quiet:
+                sys.stdout.write('[N:{:05d} U:{:04d} S:{:05d} L:{:05d} E:{:03d}] {:34s}'.format(
+                    new,
+                    updated,
+                    skipped,
+                    links,
+                    errors,
+                    os.path.basename(path)[:34]
+                ))
+                sys.stdout.flush()
     except KeyboardInterrupt:
         pool.terminate()
         pool.join()
@@ -211,12 +217,14 @@ if __name__ == '__main__':
         pool.close()
         pool.join()
 
-    ClearLine()
+    if not quiet:
+        ClearLine()
     deleted = RemoveOrphans(args.destination, expected)
 
-    print(f'[+] New:     {new}')
-    print(f'[+] Updated: {updated}')
-    print(f'[+] Skipped: {skipped}')
-    print(f'[+] Deleted: {deleted}')
-    print(f'[+] Links:   {links}')
-    print(f'[+] Errors:  {errors}')
+    if not quiet:
+        print(f'[+] New:     {new}')
+        print(f'[+] Updated: {updated}')
+        print(f'[+] Skipped: {skipped}')
+        print(f'[+] Deleted: {deleted}')
+        print(f'[+] Links:   {links}')
+        print(f'[+] Errors:  {errors}')
